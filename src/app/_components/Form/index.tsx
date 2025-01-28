@@ -9,7 +9,6 @@ import Container from '../Container';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
-import Hydrate from '../Hydrate/Hydrate';
 
 const schemaForm = z.object({
     razaoSocial: z.string().min(3),
@@ -28,6 +27,8 @@ const schemaForm = z.object({
     billingPhone: z.string(),
     enderecoEnt: z.string(),
 
+    documento: z.string(),
+
     deliveryAdressTrue: z.string(),
     deliveryZipCodeTrue: z.string(),
     deliveryDistrictTrue: z.string(),
@@ -43,6 +44,8 @@ export default function FormUse() {
 
 
     const [showDeliveryFields, setShowDeliveryFields] = useState(false);
+    const [sameAddress, setSameAddress] = useState<string | null>(null);
+    const [personType, setPersonType] = useState('');
 
 
     const form = useForm<z.infer<typeof schemaForm>>({
@@ -64,6 +67,8 @@ export default function FormUse() {
             billingPhone: '',
             enderecoEnt: '',
 
+            documento: '',
+
             deliveryAdressTrue: '',
             deliveryZipCodeTrue: '',
             deliveryDistrictTrue: '',
@@ -75,13 +80,16 @@ export default function FormUse() {
         }
     });
 
-    const cnpjValue = form.getValues('cnpj');
+    const documentValue = form.getValues('documento');
     const tipoPessoa = form.getValues('tipoPessoa');
-    const endEnt = form.getValues('enderecoEnt');
+
+
 
 
     const handleDeliveryAddressChange = useCallback((value: string) => {
-        setShowDeliveryFields(value === 'Sim');
+        setSameAddress(value);
+        setShowDeliveryFields(true);
+
         if (value === 'Sim') {
             form.setValue('deliveryAdressTrue', form.getValues('commercialAdress'));
             form.setValue('deliveryZipCodeTrue', form.getValues('commercialZipCode'));
@@ -89,17 +97,55 @@ export default function FormUse() {
             form.setValue('deliveryCityTrue', form.getValues('businessCity'));
             form.setValue('deliveryAdressNumberTrue', form.getValues('commercialAdressNumber'));
             form.setValue('complementDeliveryAddressTrue', form.getValues('complementBusinnesAddress'));
+        } else {
+            form.setValue('deliveryAdressTrue', '');
+            form.setValue('deliveryZipCodeTrue', '');
+            form.setValue('deliveryDistrictTrue', '');
+            form.setValue('deliveryCityTrue', '');
+            form.setValue('deliveryAdressNumberTrue', '');
+            form.setValue('complementDeliveryAddressTrue', '');
         }
     }, [form]);
+
+    const formatDocument = (value: string, type: string) => {
+        const numbers = value.replace(/\D/g, '');
+
+        if (type === 'Fisica') {
+            return numbers
+                .replace(/^(\d{3})(\d)/, '$1.$2')
+                .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+                .replace(/\.(\d{3})(\d)/, '.$1-$2')
+                .substring(0, 14);
+        } else {
+            return numbers
+                .replace(/^(\d{2})(\d)/, '$1.$2')
+                .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+                .replace(/\.(\d{3})(\d)/, '.$1/$2')
+                .replace(/(\d{4})(\d)/, '$1-$2')
+                .substring(0, 18);
+        }
+    };
+
+    const handlePersonTypeChange = (value: string) => {
+        setPersonType(value);
+        form.setValue('tipoPessoa', value);
+        form.setValue('documento', '');
+    };
+
+
 
     useEffect(() => {
         const controller = new AbortController();
         const signal = controller.signal;
 
         const fetchData = async () => {
-            const cleanCnpj = cnpjValue.replace(/\D/g, '');
+            // Só faz a consulta se for pessoa jurídica
+            if (tipoPessoa !== "Juridica") return;
 
-            if (cleanCnpj.length !== 14 && tipoPessoa !== "Juridica") return;
+            const cleanCnpj = documentValue.replace(/\D/g, '');
+
+            // Verifica se é um CNPJ válido (14 dígitos)
+            if (cleanCnpj.length !== 14) return;
 
             try {
                 const response = await fetch(`https://api.cnpja.com/office/${cleanCnpj}`, {
@@ -131,8 +177,7 @@ export default function FormUse() {
                     return area && number ? `${area}${number}` : '';
                 };
 
-
-
+                // Preenche os campos com os dados da API
                 form.setValue('razaoSocial', safeValue(data.razao_social || data.company?.name));
                 form.setValue('nomeFantasia', safeValue(data.nomeFantasia || data.alias));
                 form.setValue('commercialAdress', safeValue(address.street));
@@ -142,12 +187,15 @@ export default function FormUse() {
                 form.setValue('businessCity', safeValue(address.city));
                 form.setValue('commercialZipCode', safeValue(address.zip));
 
-                form.setValue('deliveryAdressTrue', safeValue(address.street));
-                form.setValue('deliveryZipCodeTrue', safeValue(address.zip));
-                form.setValue('deliveryDistrictTrue', safeValue(address.district));
-                form.setValue('deliveryCityTrue', safeValue(address.city));
-                form.setValue('deliveryAdressNumberTrue', safeValue(address.number));
-                form.setValue('complementDeliveryAddressTrue', safeValue(address.details));
+                // Se o endereço de entrega for o mesmo, atualiza também
+                if (sameAddress === 'Sim') {
+                    form.setValue('deliveryAdressTrue', safeValue(address.street));
+                    form.setValue('deliveryZipCodeTrue', safeValue(address.zip));
+                    form.setValue('deliveryDistrictTrue', safeValue(address.district));
+                    form.setValue('deliveryCityTrue', safeValue(address.city));
+                    form.setValue('deliveryAdressNumberTrue', safeValue(address.number));
+                    form.setValue('complementDeliveryAddressTrue', safeValue(address.details));
+                }
 
                 const mainPhone = phones[0];
                 if (mainPhone) {
@@ -158,7 +206,6 @@ export default function FormUse() {
                 if (billingPhone) {
                     form.setValue('billingPhone', formatPhone(billingPhone));
                 }
-
 
             } catch (error) {
                 console.error('Erro ao buscar dados do CNPJ:', error);
@@ -184,7 +231,7 @@ export default function FormUse() {
             controller.abort();
             clearTimeout(debouncer);
         };
-    }, [cnpjValue]);
+    }, [documentValue, tipoPessoa, sameAddress, form]);
 
     return (
         <div className='min-h-screen my-10'>
@@ -200,15 +247,18 @@ export default function FormUse() {
                             name="tipoPessoa"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel> Tipo de Pessoa </FormLabel>
+                                    <FormLabel>Tipo de Pessoa</FormLabel>
                                     <FormControl>
-                                        <Select value={field.value} onValueChange={(value) => field.onChange(value)}>
+                                        <Select
+                                            value={field.value}
+                                            onValueChange={handlePersonTypeChange}
+                                        >
                                             <SelectTrigger>
-                                                <SelectValue>{field.value}</SelectValue>
+                                                <SelectValue>{field.value || 'Selecione o tipo'}</SelectValue>
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="Fisica">Fisica</SelectItem>
-                                                <SelectItem value="Juridica">Juridica</SelectItem>
+                                                <SelectItem value="Fisica">Física</SelectItem>
+                                                <SelectItem value="Juridica">Jurídica</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </FormControl>
@@ -217,24 +267,19 @@ export default function FormUse() {
                         />
                         <FormField
                             control={form.control}
-                            name="cnpj"
+                            name="documento"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel> CNPJ </FormLabel>
+                                    <FormLabel>{personType === 'Fisica' ? 'CPF' : 'CNPJ'}</FormLabel>
                                     <FormControl>
                                         <Input
                                             {...field}
-                                            placeholder="00.000.000/0000-00"
+                                            placeholder={personType === 'Fisica' ? '000.000.000-00' : '00.000.000/0000-00'}
                                             onChange={(e) => {
-                                                const rawValue = e.target.value.replace(/\D/g, '');
-                                                const formatted = rawValue
-                                                    .replace(/^(\d{2})(\d)/, '$1.$2')
-                                                    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-                                                    .replace(/\.(\d{3})(\d)/, '.$1/$2')
-                                                    .replace(/(\d{4})(\d)/, '$1-$2');
-                                                field.onChange(formatted.substring(0, 18));
+                                                const formatted = formatDocument(e.target.value, personType);
+                                                field.onChange(formatted);
                                             }}
-                                            maxLength={18}
+                                            maxLength={personType === 'Fisica' ? 14 : 18}
                                         />
                                     </FormControl>
                                 </FormItem>
@@ -246,7 +291,7 @@ export default function FormUse() {
                             render={({ field }) => (
                                 <FormItem className='flex flex-col'>
                                     <FormLabel> Inscrição Estadual</FormLabel>
-                                    <small className='text-gray-400 text-xs leading-none'>Isento para Pessoa Fisica</small>
+                                    <small className='text-gray-400 text-xs leading-none'>Isento para CPF não Contribuinte</small>
                                     <FormControl>
                                         <Input placeholder="Inscrição Estadual" {...field} />
                                     </FormControl>
@@ -380,8 +425,8 @@ export default function FormUse() {
                                 <FormItem>
                                     <FormLabel>O Endereço de entrega é o mesmo do Endereço Comercial?</FormLabel>
                                     <FormControl>
-                                        <Select 
-                                            value={field.value} 
+                                        <Select
+                                            value={field.value}
                                             onValueChange={(value) => {
                                                 field.onChange(value);
                                                 handleDeliveryAddressChange(value);
@@ -410,39 +455,39 @@ export default function FormUse() {
                                         <FormItem>
                                             <FormLabel>Endereço de Entrega</FormLabel>
                                             <FormControl>
-                                                <Input {...field} />
+                                                <Input placeholder='Endereço de Entrega' {...field} />
                                             </FormControl>
                                         </FormItem>
                                     )}
                                 />
-                                <FormField 
+                                <FormField
                                     control={form.control}
                                     name="deliveryAdressNumberTrue"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Número</FormLabel>
                                             <FormControl>
-                                                <Input { ...field } />
+                                                <Input {...field} />
                                             </FormControl>
                                         </FormItem>
                                     )}
                                 />
-                                <FormField 
+                                <FormField
                                     control={form.control}
                                     name="complementDeliveryAddressTrue"
-                                    render={({ field }) =>(
+                                    render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Complemento</FormLabel>
                                             <FormControl>
-                                                <Input { ...field }/>
+                                                <Input {...field} />
                                             </FormControl>
                                         </FormItem>
                                     )}
                                 />
-                                <FormField 
+                                <FormField
                                     control={form.control}
                                     name="deliveryDistrictTrue"
-                                    render={({ field }) =>(
+                                    render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Bairro</FormLabel>
                                             <FormControl>
@@ -454,7 +499,7 @@ export default function FormUse() {
                                 <FormField
                                     control={form.control}
                                     name="deliveryCityTrue"
-                                    render={({ field }) =>(
+                                    render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Cidade</FormLabel>
                                             <FormControl>
@@ -463,14 +508,14 @@ export default function FormUse() {
                                         </FormItem>
                                     )}
                                 />
-                                <FormField 
+                                <FormField
                                     control={form.control}
                                     name="deliveryZipCodeTrue"
-                                    render={({ field }) =>(
+                                    render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Código Postal</FormLabel>
                                             <FormControl>
-                                                <Input {...field}/>
+                                                <Input {...field} />
                                             </FormControl>
                                         </FormItem>
                                     )}
