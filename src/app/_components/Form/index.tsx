@@ -22,6 +22,9 @@ const schemaForm = z.object({
     businessCity: z.string(),
     commercialAdressNumber: z.string(),
     complementBusinnesAddress: z.string(),
+    businessPhone: z.string(),
+    billingPhone: z.string(),
+
 
 })
 
@@ -41,6 +44,8 @@ export default function FormUse() {
             businessCity: '',
             commercialAdressNumber: '',
             complementBusinnesAddress: '',
+            businessPhone: '',
+            billingPhone: '',
 
         }
     });
@@ -69,8 +74,8 @@ export default function FormUse() {
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
                 const data = await response.json();
+
                 form.setValue('razaoSocial', data.razao_social || data.company.name);
-                form.setValue('inscricaoEstadual', data.inscricao_estadual || data.IE);
                 form.setValue('nomeFantasia', data.nomeFantasia || data.alias );
                 form.setValue('commercialAdress', data.commercialAdress || data.address.street);
                 form.setValue('commercialAdressNumber', data.commercialAdressNumber || data.address.number);
@@ -78,11 +83,10 @@ export default function FormUse() {
                 form.setValue('businessDistrict', data.businessDistrict || data.address.district);
                 form.setValue('businessCity', data.businessCity || data.address.city);
                 form.setValue('commercialZipCode', data.commercialZipCode || data.address.zip)
+                form.setValue('businessCity', data.businessPhone || (data.phones.area + data.phones.number))
 
             } catch (error) {
-                // if (error.name !== 'AbortError') {
-                //     console.error("Erro na consulta:", error);
-                // }
+                console.error('Nenhum dado encontrado para esse CNPJ')
             }
         };
 
@@ -97,7 +101,7 @@ export default function FormUse() {
         <div className='min-h-screen my-10'>
             <Container>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit()} className='w-full border border-1-gray-200 p-10 rounded-sm shadow-lg flex flex-col gap-3'>
+                    <form className='w-full border border-1-gray-200 p-10 rounded-sm shadow-lg flex flex-col gap-3'>
                         <FormField
                             control={form.control}
                             name="tipoPessoa"
@@ -260,6 +264,18 @@ export default function FormUse() {
                                     <FormLabel>Código Postal</FormLabel>
                                     <FormControl>
                                         <Input placeholder='Código Postal' {...field} />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField 
+                            control={form.control}
+                            name="billingPhone"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Telefone Comercial</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder='Telefone Comercial' {...field} />
                                     </FormControl>
                                 </FormItem>
                             )}
