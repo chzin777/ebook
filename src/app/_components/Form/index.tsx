@@ -7,7 +7,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/
 import { Input } from '@/components/ui/input';
 import Container from '../Container';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import Image from 'next/image';
+import Hydrate from '../Hydrate/Hydrate';
 
 const schemaForm = z.object({
     razaoSocial: z.string().min(3),
@@ -24,11 +26,25 @@ const schemaForm = z.object({
     complementBusinnesAddress: z.string(),
     businessPhone: z.string(),
     billingPhone: z.string(),
+    enderecoEnt: z.string(),
 
+    deliveryAdressTrue: z.string(),
+    deliveryZipCodeTrue: z.string(),
+    deliveryDistrictTrue: z.string(),
+    deliveryCityTrue: z.string(),
+    deliveryAdressNumberTrue: z.string(),
+    complementDeliveryAddressTrue: z.string(),
 
-})
+});
+
+type FormValues = z.infer<typeof schemaForm>;
 
 export default function FormUse() {
+
+
+    const [showDeliveryFields, setShowDeliveryFields] = useState(false);
+
+
     const form = useForm<z.infer<typeof schemaForm>>({
         resolver: zodResolver(schemaForm),
         defaultValues: {
@@ -46,12 +62,35 @@ export default function FormUse() {
             complementBusinnesAddress: '',
             businessPhone: '',
             billingPhone: '',
+            enderecoEnt: '',
+
+            deliveryAdressTrue: '',
+            deliveryZipCodeTrue: '',
+            deliveryDistrictTrue: '',
+            deliveryCityTrue: '',
+            deliveryAdressNumberTrue: '',
+            complementDeliveryAddressTrue: '',
+
 
         }
     });
 
     const cnpjValue = form.getValues('cnpj');
     const tipoPessoa = form.getValues('tipoPessoa');
+    const endEnt = form.getValues('enderecoEnt');
+
+
+    const handleDeliveryAddressChange = useCallback((value: string) => {
+        setShowDeliveryFields(value === 'Sim');
+        if (value === 'Sim') {
+            form.setValue('deliveryAdressTrue', form.getValues('commercialAdress'));
+            form.setValue('deliveryZipCodeTrue', form.getValues('commercialZipCode'));
+            form.setValue('deliveryDistrictTrue', form.getValues('businessDistrict'));
+            form.setValue('deliveryCityTrue', form.getValues('businessCity'));
+            form.setValue('deliveryAdressNumberTrue', form.getValues('commercialAdressNumber'));
+            form.setValue('complementDeliveryAddressTrue', form.getValues('complementBusinnesAddress'));
+        }
+    }, [form]);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -59,7 +98,7 @@ export default function FormUse() {
 
         const fetchData = async () => {
             const cleanCnpj = cnpjValue.replace(/\D/g, '');
-            
+
             if (cleanCnpj.length !== 14 && tipoPessoa !== "Juridica") return;
 
             try {
@@ -71,22 +110,72 @@ export default function FormUse() {
                     }
                 });
 
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) {
+                    console.log('CNPJ não encontrado ou serviço indisponível');
+                    return;
+                }
 
                 const data = await response.json();
 
-                form.setValue('razaoSocial', data.razao_social || data.company.name);
-                form.setValue('nomeFantasia', data.nomeFantasia || data.alias );
-                form.setValue('commercialAdress', data.commercialAdress || data.address.street);
-                form.setValue('commercialAdressNumber', data.commercialAdressNumber || data.address.number);
-                form.setValue('complementBusinnesAddress', data.complementBusinnesAddress || data.address.details);
-                form.setValue('businessDistrict', data.businessDistrict || data.address.district);
-                form.setValue('businessCity', data.businessCity || data.address.city);
-                form.setValue('commercialZipCode', data.commercialZipCode || data.address.zip)
-                form.setValue('businessCity', data.businessPhone || (data.phones.area + data.phones.number))
+                const safeValue = (value: any, defaultValue = '') => {
+                    return value !== undefined && value !== null ? value : defaultValue;
+                };
+
+                const address = data.address || {};
+                const phones = Array.isArray(data.phones) ? data.phones : [];
+
+                const formatPhone = (phones: any) => {
+                    if (!phones) return '';
+                    const area = safeValue(phones.area);
+                    const number = safeValue(phones.number);
+                    return area && number ? `${area}${number}` : '';
+                };
+
+
+
+                form.setValue('razaoSocial', safeValue(data.razao_social || data.company?.name));
+                form.setValue('nomeFantasia', safeValue(data.nomeFantasia || data.alias));
+                form.setValue('commercialAdress', safeValue(address.street));
+                form.setValue('commercialAdressNumber', safeValue(address.number));
+                form.setValue('complementBusinnesAddress', safeValue(address.details));
+                form.setValue('businessDistrict', safeValue(address.district));
+                form.setValue('businessCity', safeValue(address.city));
+                form.setValue('commercialZipCode', safeValue(address.zip));
+
+                form.setValue('deliveryAdressTrue', safeValue(address.street));
+                form.setValue('deliveryZipCodeTrue', safeValue(address.zip));
+                form.setValue('deliveryDistrictTrue', safeValue(address.district));
+                form.setValue('deliveryCityTrue', safeValue(address.city));
+                form.setValue('deliveryAdressNumberTrue', safeValue(address.number));
+                form.setValue('complementDeliveryAddressTrue', safeValue(address.details));
+
+                const mainPhone = phones[0];
+                if (mainPhone) {
+                    form.setValue('businessPhone', formatPhone(mainPhone));
+                }
+
+                const billingPhone = phones[1];
+                if (billingPhone) {
+                    form.setValue('billingPhone', formatPhone(billingPhone));
+                }
+
 
             } catch (error) {
-                console.error('Nenhum dado encontrado para esse CNPJ')
+                console.error('Erro ao buscar dados do CNPJ:', error);
+                const fieldsToReset: Array<keyof FormValues> = [
+                    'razaoSocial',
+                    'nomeFantasia',
+                    'commercialAdress',
+                    'commercialAdressNumber',
+                    'complementBusinnesAddress',
+                    'businessDistrict',
+                    'businessCity',
+                    'commercialZipCode',
+                    'businessPhone',
+                    'billingPhone'
+                ];
+
+                fieldsToReset.forEach(field => form.setValue(field, ''));
             }
         };
 
@@ -102,6 +191,10 @@ export default function FormUse() {
             <Container>
                 <Form {...form}>
                     <form className='w-full border border-1-gray-200 p-10 rounded-sm shadow-lg flex flex-col gap-3'>
+                        <div className='mb-10 flex flex-col items-center justify-center gap-10'>
+                            <Image src={"/PLANO_DE_HIGIENE.png"} width={1920} height={200} alt='Banner' />
+                            <h1 className='font-semibold text-xl'>FORMULÁRIO PARA CADASTRO</h1>
+                        </div>
                         <FormField
                             control={form.control}
                             name="tipoPessoa"
@@ -196,7 +289,7 @@ export default function FormUse() {
                                 </FormItem>
                             )}
                         />
-                        <FormField 
+                        <FormField
                             control={form.control}
                             name="commercialAdress"
                             render={({ field }) => (
@@ -208,7 +301,7 @@ export default function FormUse() {
                                 </FormItem>
                             )}
                         />
-                        <FormField 
+                        <FormField
                             control={form.control}
                             name="commercialAdressNumber"
                             render={({ field }) => (
@@ -232,7 +325,7 @@ export default function FormUse() {
                                 </FormItem>
                             )}
                         />
-                        <FormField 
+                        <FormField
                             control={form.control}
                             name="businessDistrict"
                             render={({ field }) => (
@@ -244,10 +337,10 @@ export default function FormUse() {
                                 </FormItem>
                             )}
                         />
-                        <FormField 
+                        <FormField
                             control={form.control}
                             name="businessCity"
-                            render={({ field }) =>(
+                            render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Cidade</FormLabel>
                                     <FormControl>
@@ -256,10 +349,10 @@ export default function FormUse() {
                                 </FormItem>
                             )}
                         />
-                        <FormField 
+                        <FormField
                             control={form.control}
                             name="commercialZipCode"
-                            render={({ field }) =>(
+                            render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Código Postal</FormLabel>
                                     <FormControl>
@@ -268,7 +361,7 @@ export default function FormUse() {
                                 </FormItem>
                             )}
                         />
-                        <FormField 
+                        {/* <FormField
                             control={form.control}
                             name="billingPhone"
                             render={({ field }) => (
@@ -279,7 +372,111 @@ export default function FormUse() {
                                     </FormControl>
                                 </FormItem>
                             )}
+                        /> */}
+                        <FormField
+                            control={form.control}
+                            name="enderecoEnt"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>O Endereço de entrega é o mesmo do Endereço Comercial?</FormLabel>
+                                    <FormControl>
+                                        <Select 
+                                            value={field.value} 
+                                            onValueChange={(value) => {
+                                                field.onChange(value);
+                                                handleDeliveryAddressChange(value);
+                                            }}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue>
+                                                    {field.value || 'Selecione uma opção'}
+                                                </SelectValue>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value='Sim'>Sim</SelectItem>
+                                                <SelectItem value='Nao'>Não</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </FormControl>
+                                </FormItem>
+                            )}
                         />
+                        {showDeliveryFields && (
+                            <div className="flex flex-col gap-3 border border-1-green-100 p-10">
+                                <FormField
+                                    control={form.control}
+                                    name="deliveryAdressTrue"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Endereço de Entrega</FormLabel>
+                                            <FormControl>
+                                                <Input {...field} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField 
+                                    control={form.control}
+                                    name="deliveryAdressNumberTrue"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Número</FormLabel>
+                                            <FormControl>
+                                                <Input { ...field } />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField 
+                                    control={form.control}
+                                    name="complementDeliveryAddressTrue"
+                                    render={({ field }) =>(
+                                        <FormItem>
+                                            <FormLabel>Complemento</FormLabel>
+                                            <FormControl>
+                                                <Input { ...field }/>
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField 
+                                    control={form.control}
+                                    name="deliveryDistrictTrue"
+                                    render={({ field }) =>(
+                                        <FormItem>
+                                            <FormLabel>Bairro</FormLabel>
+                                            <FormControl>
+                                                <Input {...field} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="deliveryCityTrue"
+                                    render={({ field }) =>(
+                                        <FormItem>
+                                            <FormLabel>Cidade</FormLabel>
+                                            <FormControl>
+                                                <Input {...field} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField 
+                                    control={form.control}
+                                    name="deliveryZipCodeTrue"
+                                    render={({ field }) =>(
+                                        <FormItem>
+                                            <FormLabel>Código Postal</FormLabel>
+                                            <FormControl>
+                                                <Input {...field}/>
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        )}
                     </form>
                 </Form>
             </Container>
