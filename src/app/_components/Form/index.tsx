@@ -9,10 +9,12 @@ import Container from '../Container';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
 
 const schemaForm = z.object({
     razaoSocial: z.string().min(3),
     email: z.string().email(),
+    emailNfe: z.string().email(),
     tipoPessoa: z.string(),
     cnpj: z.string(),
     inscricaoEstadual: z.string(),
@@ -28,6 +30,7 @@ const schemaForm = z.object({
     enderecoEnt: z.string(),
 
     documento: z.string(),
+    codRCA: z.number(),
 
     deliveryAdressTrue: z.string(),
     deliveryZipCodeTrue: z.string(),
@@ -48,11 +51,33 @@ export default function FormUse() {
     const [personType, setPersonType] = useState('');
 
 
+    const handleSubmit = async (data: FormValues) => {
+        console.log(data);
+        try {
+            const response = await fetch('https://jhionathan.app.n8n.cloud/webhook-test/00b51a05-5580-42b3-8e57-374b053c3e89', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+            if (response.ok) {
+                console.log('Dados enviados com sucesso!');
+            } else {
+                console.error('Erro ao enviar dados:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Erro ao enviar dados:', error);
+        }
+    }
+
+
     const form = useForm<z.infer<typeof schemaForm>>({
         resolver: zodResolver(schemaForm),
         defaultValues: {
             razaoSocial: '',
             email: '',
+            emailNfe: '',
             tipoPessoa: '',
             cnpj: '',
             inscricaoEstadual: '',
@@ -68,6 +93,7 @@ export default function FormUse() {
             enderecoEnt: '',
 
             documento: '',
+            
 
             deliveryAdressTrue: '',
             deliveryZipCodeTrue: '',
@@ -139,16 +165,16 @@ export default function FormUse() {
         const signal = controller.signal;
 
         const fetchData = async () => {
-            // Só faz a consulta se for pessoa jurídica
+            
             if (tipoPessoa !== "Juridica") return;
 
             const cleanCnpj = documentValue.replace(/\D/g, '');
 
-            // Verifica se é um CNPJ válido (14 dígitos)
+            
             if (cleanCnpj.length !== 14) return;
 
             try {
-                const response = await fetch(`https://api.cnpja.com/office/${cleanCnpj}`, {
+                const response = await fetch(`https://api.cnpja.com/office/${cleanCnpj}?maxAge=1&registrations=BR`, {
                     signal,
                     headers: {
                         "Authorization": "f7568ad8-0d63-4106-bbe2-b39335374562-3ccfe766-bc6e-478b-b924-2913001e2129",
@@ -177,7 +203,7 @@ export default function FormUse() {
                     return area && number ? `${area}${number}` : '';
                 };
 
-                // Preenche os campos com os dados da API
+                
                 form.setValue('razaoSocial', safeValue(data.razao_social || data.company?.name));
                 form.setValue('nomeFantasia', safeValue(data.nomeFantasia || data.alias));
                 form.setValue('commercialAdress', safeValue(address.street));
@@ -186,8 +212,9 @@ export default function FormUse() {
                 form.setValue('businessDistrict', safeValue(address.district));
                 form.setValue('businessCity', safeValue(address.city));
                 form.setValue('commercialZipCode', safeValue(address.zip));
+                form.setValue('inscricaoEstadual', safeValue(data.registrations[0].number))
 
-                // Se o endereço de entrega for o mesmo, atualiza também
+                
                 if (sameAddress === 'Sim') {
                     form.setValue('deliveryAdressTrue', safeValue(address.street));
                     form.setValue('deliveryZipCodeTrue', safeValue(address.zip));
@@ -237,7 +264,7 @@ export default function FormUse() {
         <div className='min-h-screen my-10'>
             <Container>
                 <Form {...form}>
-                    <form className='w-full border border-1-gray-200 p-10 rounded-sm shadow-lg flex flex-col gap-3'>
+                    <form onSubmit={form.handleSubmit(handleSubmit)} className='w-full border border-1-gray-200 p-10 rounded-sm shadow-lg flex flex-col gap-3'>
                         <div className='mb-10 flex flex-col items-center justify-center gap-10'>
                             <Image src={"/PLANO_DE_HIGIENE.png"} width={1920} height={200} alt='Banner' />
                             <h1 className='font-semibold text-xl'>FORMULÁRIO PARA CADASTRO</h1>
@@ -329,7 +356,7 @@ export default function FormUse() {
                                 <FormItem>
                                     <FormLabel> Email </FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Email" {...field} />
+                                        <Input placeholder="email@email.com" {...field} />
                                     </FormControl>
                                 </FormItem>
                             )}
@@ -448,6 +475,9 @@ export default function FormUse() {
                         />
                         {showDeliveryFields && (
                             <div className="flex flex-col gap-3 border border-1-green-100 p-10">
+                                <div className='mx-auto'>
+                                    <h2 className='font-semibold text-xl'>ENDERAÇO DE ENTREGA</h2>
+                                </div>
                                 <FormField
                                     control={form.control}
                                     name="deliveryAdressTrue"
@@ -522,6 +552,31 @@ export default function FormUse() {
                                 />
                             </div>
                         )}
+                        <FormField 
+                            control={form.control}
+                            name="emailNfe"
+                            render={({ field }) =>(
+                                <FormItem>
+                                    <FormLabel>Email NFE</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder='email@email.com' {...field} />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        {/* <FormField 
+                            control={form.control}
+                            name="codRCA"
+                            render={({ field }) =>(
+                                <FormItem>
+                                    <FormLabel>Código do RCA</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder='' {...field} />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        /> */}
+                        <Button type="submit" className="w-[200px] bg-blue-400 hover:bg-blue-500">Enviar</Button>
                     </form>
                 </Form>
             </Container>
