@@ -1,6 +1,6 @@
 'use client'
 
-import z from 'zod';
+import z, { late } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
@@ -10,6 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { opstionsPraca } from '@/lib/praca';
+import { atividade } from '@/lib/atividade';
+import { InputField } from '../FormFild';
+
 
 const schemaForm = z.object({
     razaoSocial: z.string().min(3),
@@ -30,7 +34,10 @@ const schemaForm = z.object({
     enderecoEnt: z.string(),
 
     documento: z.string(),
-    codRCA: z.number(),
+    codRCA: z.string(),
+
+    praca: z.string(),
+    atividade: z.string(),
 
     deliveryAdressTrue: z.string(),
     deliveryZipCodeTrue: z.string(),
@@ -54,7 +61,7 @@ export default function FormUse() {
     const handleSubmit = async (data: FormValues) => {
         console.log(data);
         try {
-            const response = await fetch('https://jhionathan.app.n8n.cloud/webhook-test/00b51a05-5580-42b3-8e57-374b053c3e89', {
+            const response = await fetch('https://jhionathan.app.n8n.cloud/webhook-test/51a7c5de-33ca-4ae4-814c-a9c300712454', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -93,7 +100,10 @@ export default function FormUse() {
             enderecoEnt: '',
 
             documento: '',
-            
+            codRCA: '',
+
+            praca: '',
+            atividade: '',
 
             deliveryAdressTrue: '',
             deliveryZipCodeTrue: '',
@@ -165,12 +175,12 @@ export default function FormUse() {
         const signal = controller.signal;
 
         const fetchData = async () => {
-            
+
             if (tipoPessoa !== "Juridica") return;
 
             const cleanCnpj = documentValue.replace(/\D/g, '');
 
-            
+
             if (cleanCnpj.length !== 14) return;
 
             try {
@@ -203,7 +213,7 @@ export default function FormUse() {
                     return area && number ? `${area}${number}` : '';
                 };
 
-                
+
                 form.setValue('razaoSocial', safeValue(data.razao_social || data.company?.name));
                 form.setValue('nomeFantasia', safeValue(data.nomeFantasia || data.alias));
                 form.setValue('commercialAdress', safeValue(address.street));
@@ -214,7 +224,7 @@ export default function FormUse() {
                 form.setValue('commercialZipCode', safeValue(address.zip));
                 form.setValue('inscricaoEstadual', safeValue(data.registrations[0].number))
 
-                
+
                 if (sameAddress === 'Sim') {
                     form.setValue('deliveryAdressTrue', safeValue(address.street));
                     form.setValue('deliveryZipCodeTrue', safeValue(address.zip));
@@ -325,7 +335,8 @@ export default function FormUse() {
                                 </FormItem>
                             )}
                         />
-                        <FormField
+                        <InputField control={form.control} name={`nomeFantasia`} label="Nome Fantasia" placeholder="Nome Fantasia" />
+                        {/* <FormField
                             control={form.control}
                             name="nomeFantasia"
                             render={({ field }) => (
@@ -336,7 +347,7 @@ export default function FormUse() {
                                     </FormControl>
                                 </FormItem>
                             )}
-                        />
+                        /> */}
                         <FormField
                             control={form.control}
                             name="razaoSocial"
@@ -349,18 +360,7 @@ export default function FormUse() {
                                 </FormItem>
                             )}
                         />
-                        <FormField
-                            control={form.control}
-                            name="email"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel> Email </FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="email@email.com" {...field} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
+
                         <FormField
                             control={form.control}
                             name="commercialAdress"
@@ -433,18 +433,6 @@ export default function FormUse() {
                                 </FormItem>
                             )}
                         />
-                        {/* <FormField
-                            control={form.control}
-                            name="billingPhone"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Telefone Comercial</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder='Telefone Comercial' {...field} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        /> */}
                         <FormField
                             control={form.control}
                             name="enderecoEnt"
@@ -552,10 +540,22 @@ export default function FormUse() {
                                 />
                             </div>
                         )}
-                        <FormField 
+                        <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel> Email </FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="email@email.com" {...field} />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
                             control={form.control}
                             name="emailNfe"
-                            render={({ field }) =>(
+                            render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Email NFE</FormLabel>
                                     <FormControl>
@@ -564,10 +564,10 @@ export default function FormUse() {
                                 </FormItem>
                             )}
                         />
-                        {/* <FormField 
+                        <FormField
                             control={form.control}
                             name="codRCA"
-                            render={({ field }) =>(
+                            render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Código do RCA</FormLabel>
                                     <FormControl>
@@ -575,8 +575,72 @@ export default function FormUse() {
                                     </FormControl>
                                 </FormItem>
                             )}
-                        /> */}
-                        <Button type="submit" className="w-[200px] bg-blue-400 hover:bg-blue-500">Enviar</Button>
+                        />
+                        <FormField
+                            control={form.control}
+                            name="praca"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Praça do Cliente</FormLabel>
+                                    <FormControl>
+                                        <Select
+                                            value={field.value}
+                                            onValueChange={field.onChange}
+                                        >
+                                            <SelectTrigger>
+                                            <SelectValue placeholder="Selecione a Praça">
+                                                    {field.value ? opstionsPraca.find(a => a.value === field.value)?.label : 'Praça do Cliente'}
+                                                </SelectValue>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {opstionsPraca.map((option) => (
+                                                    <SelectItem key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="atividade"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Ramo de Atividade</FormLabel>
+                                    <FormControl>
+                                        <Select
+                                            value={field.value}
+                                            onValueChange={field.onChange}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecione o ramo de atividade">
+                                                    {field.value ? atividade.find(a => a.value === field.value)?.label : 'Ramo de Atividade '}
+                                                </SelectValue>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {atividade.map((option) => (
+                                                    <SelectItem key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+
+                        <Button
+                            type="submit"
+                            className="w-[200px] bg-blue-400 hover:bg-blue-500"
+                            disabled={form.formState.isSubmitting}
+                        >
+                            {form.formState.isSubmitting ? 'Enviando...' : 'Enviar'}
+                        </Button>
+                        
                     </form>
                 </Form>
             </Container>
