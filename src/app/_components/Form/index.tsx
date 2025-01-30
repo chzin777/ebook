@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { opstionsPraca } from '@/lib/praca';
 import { atividade } from '@/lib/atividade';
 import { InputField } from '../FormFild';
+import { toast } from 'sonner';
 
 
 const schemaForm = z.object({
@@ -60,8 +61,9 @@ export default function FormUse() {
 
     const handleSubmit = async (data: FormValues) => {
         console.log(data);
+        
         try {
-            const response = await fetch('https://jhionathan.app.n8n.cloud/webhook-test/51a7c5de-33ca-4ae4-814c-a9c300712454', {
+            const response = await fetch('https://r3suprimentos.app.n8n.cloud/webhook-test/ac3d846a-eba7-4930-b038-b7282626ebae', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -69,7 +71,9 @@ export default function FormUse() {
                 body: JSON.stringify(data),
             });
             if (response.ok) {
-                console.log('Dados enviados com sucesso!');
+                toast("Formulario enviado com sucesso!",{
+                    description: "O Cadastro do cliente está em analise"
+                });
             } else {
                 console.error('Erro ao enviar dados:', response.statusText);
             }
@@ -276,7 +280,7 @@ export default function FormUse() {
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)} className='w-full border border-1-gray-200 p-10 rounded-sm shadow-lg flex flex-col gap-3'>
                         <div className='mb-10 flex flex-col items-center justify-center gap-10'>
-                            <Image src={"/PLANO_DE_HIGIENE.png"} width={1920} height={200} alt='Banner' />
+                            <Image src={"/PLANO_DE_HIGIENE.png"} width={1920} height={200} alt='Banner' className='shadow-lg rounded-sm' />
                             <h1 className='font-semibold text-xl'>FORMULÁRIO PARA CADASTRO</h1>
                         </div>
                         <FormField
@@ -335,104 +339,27 @@ export default function FormUse() {
                                 </FormItem>
                             )}
                         />
-                        <InputField control={form.control} name={`nomeFantasia`} label="Nome Fantasia" placeholder="Nome Fantasia" />
-                        {/* <FormField
-                            control={form.control}
-                            name="nomeFantasia"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel> Nome Fantasia </FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="Nome Fantasia" {...field} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        /> */}
-                        <FormField
-                            control={form.control}
-                            name="razaoSocial"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel> Razão Social </FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="Razão Social" {...field} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
 
-                        <FormField
-                            control={form.control}
-                            name="commercialAdress"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Endereço Comercial</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder='Endereço Comercial' {...field} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="commercialAdressNumber"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Número</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder='Número' {...field} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="complementBusinnesAddress"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Complemento</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder='Complemento' {...field} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="businessDistrict"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Bairro</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder='Bairro' {...field} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="businessCity"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Cidade</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder='Cidade' {...field} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="commercialZipCode"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Código Postal</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder='Código Postal' {...field} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
+                        <InputField control={form.control} name={`nomeFantasia`} label="Nome Fantasia" placeholder="Nome Fantasia" />
+                        
+                        <InputField control={form.control} name={`razaoSocial`} label="Razão Social" placeholder="Razão Social" />
+
+                        <InputField control={form.control} name={`commercialAdress`} label="Endereço Comercial" placeholder="Endereço Comercial" />    
+
+                        <InputField control={form.control} name={`commercialAdressNumber`} label="Número" placeholder="Número" />    
+                       
+                        <InputField control={form.control} name={`complementBusinnesAddress`} label="Complemento" placeholder="Complemento" />    
+                        
+                        <InputField control={form.control} name={`businessDistrict`} label="Bairro" placeholder="Bairro" />    
+                        
+                        <InputField control={form.control} name={`businessCity`} label="Cidade" placeholder="Cidade" />    
+                        
+                        <InputField control={form.control} name={`commercialZipCode`} label="CEP" placeholder="CEP" />    
+                        
+                        {/* <InputField control={form.control} name={`businessPhone`} label="Telefone" placeholder="Telefone" />    
+                        
+                        <InputField control={form.control} name={`billingPhone`} label="Telefone" placeholder="Telefone" /> */}
+                        
                         <FormField
                             control={form.control}
                             name="enderecoEnt"
@@ -462,120 +389,32 @@ export default function FormUse() {
                             )}
                         />
                         {showDeliveryFields && (
-                            <div className="flex flex-col gap-3 border border-1-green-100 p-10">
+                            <div className="flex flex-col gap-3 border border-1-green-100 p-10 rounded-sm shadow-sm">
                                 <div className='mx-auto'>
                                     <h2 className='font-semibold text-xl'>ENDERAÇO DE ENTREGA</h2>
                                 </div>
-                                <FormField
-                                    control={form.control}
-                                    name="deliveryAdressTrue"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Endereço de Entrega</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder='Endereço de Entrega' {...field} />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="deliveryAdressNumberTrue"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Número</FormLabel>
-                                            <FormControl>
-                                                <Input {...field} />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="complementDeliveryAddressTrue"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Complemento</FormLabel>
-                                            <FormControl>
-                                                <Input {...field} />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="deliveryDistrictTrue"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Bairro</FormLabel>
-                                            <FormControl>
-                                                <Input {...field} />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="deliveryCityTrue"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Cidade</FormLabel>
-                                            <FormControl>
-                                                <Input {...field} />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="deliveryZipCodeTrue"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Código Postal</FormLabel>
-                                            <FormControl>
-                                                <Input {...field} />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
+
+                                <InputField control={form.control} name={`deliveryAdressTrue`} label="Endereço de Entrega" placeholder="Endereço de Entrega" />  
+
+                                <InputField control={form.control} name={`deliveryAdressNumberTrue`} label="Numero" placeholder="Numero" />
+
+                                <InputField control={form.control} name={`complementDeliveryAddressTrue`} label="Complemento" placeholder="Complemento" />
+
+                                <InputField control={form.control} name={`deliveryDistrictTrue`} label="Bairro" placeholder="Bairro" />  
+
+                                <InputField control={form.control} name={`deliveryCityTrue`} label="Cidade" placeholder="Cidade" />
+
+                                <InputField control={form.control} name={`deliveryZipCodeTrue`} label="CEP" placeholder="CEP" />
+                                
                             </div>
                         )}
-                        <FormField
-                            control={form.control}
-                            name="email"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel> Email </FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="email@email.com" {...field} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="emailNfe"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Email NFE</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder='email@email.com' {...field} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="codRCA"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Código do RCA</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder='' {...field} />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
+
+                        <InputField control={form.control} name={`email`} label="Email" placeholder="Email" />
+
+                        <InputField control={form.control} name={`emailNfe`} label="Email NFE" placeholder="Email NFE" />
+
+                        <InputField control={form.control} name={`codRCA`} label="Código do RCA" placeholder="Código do RCA" />
+
                         <FormField
                             control={form.control}
                             name="praca"
@@ -635,7 +474,7 @@ export default function FormUse() {
 
                         <Button
                             type="submit"
-                            className="w-[200px] bg-blue-400 hover:bg-blue-500"
+                            className="w-[400px] mt-8 bg-blue-400 hover:bg-blue-500 mx-auto"
                             disabled={form.formState.isSubmitting}
                         >
                             {form.formState.isSubmitting ? 'Enviando...' : 'Enviar'}
