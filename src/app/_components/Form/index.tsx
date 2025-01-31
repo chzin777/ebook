@@ -283,8 +283,7 @@ export default function FormUse() {
                     form.setValue('complementDeliveryAddressTrue', safeValue(address.details));
                 }
             } catch (error) {
-                toast.error('Erro ao buscar dados do CNPJ', {
-                    description: 'Verifique se o CNPJ foi digitado corretamente',
+                toast.error('Erro ao buscar dados do CNPJ, Verifique se o CNPJ foi digitado corretamente', {
                     style: {
                         background: 'red',
                         color: 'white'
