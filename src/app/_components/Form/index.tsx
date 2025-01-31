@@ -28,6 +28,7 @@ const schemaForm = z.object({
     commercialZipCode: z.string(),
     businessDistrict: z.string(),
     businessCity: z.string(),
+    businessState: z.string(),
     commercialAdressNumber: z.string(),
     complementBusinnesAddress: z.string(),
     businessPhone: z.string(),
@@ -40,10 +41,13 @@ const schemaForm = z.object({
     praca: z.string(),
     atividade: z.string(),
 
+    avistaPrazo: z.string(),
+
     deliveryAdressTrue: z.string(),
     deliveryZipCodeTrue: z.string(),
     deliveryDistrictTrue: z.string(),
     deliveryCityTrue: z.string(),
+    deliveryStateTrue: z.string(),
     deliveryAdressNumberTrue: z.string(),
     complementDeliveryAddressTrue: z.string(),
 
@@ -60,8 +64,8 @@ export default function FormUse() {
 
 
     const handleSubmit = async (data: FormValues) => {
-        console.log(data);
-        
+
+
         try {
             const response = await fetch('https://r3suprimentos.app.n8n.cloud/webhook-test/ac3d846a-eba7-4930-b038-b7282626ebae', {
                 method: 'POST',
@@ -71,9 +75,47 @@ export default function FormUse() {
                 body: JSON.stringify(data),
             });
             if (response.ok) {
-                toast("Formulario enviado com sucesso!",{
+                toast("Formulario enviado com sucesso!", {
                     description: "O Cadastro do cliente está em analise"
                 });
+
+
+                form.reset({
+                    razaoSocial: '',
+                    email: '',
+                    emailNfe: '',
+                    tipoPessoa: '',
+                    cnpj: '',
+                    inscricaoEstadual: '',
+                    nomeFantasia: '',
+                    commercialAdress: '',
+                    commercialZipCode: '',
+                    businessDistrict: '',
+                    businessCity: '',
+                    businessState: '',
+                    commercialAdressNumber: '',
+                    complementBusinnesAddress: '',
+                    businessPhone: '',
+                    billingPhone: '',
+                    enderecoEnt: '',
+                    documento: '',
+                    codRCA: '',
+                    praca: '',
+                    atividade: '',
+                    deliveryAdressTrue: '',
+                    deliveryZipCodeTrue: '',
+                    deliveryDistrictTrue: '',
+                    deliveryCityTrue: '',
+                    deliveryStateTrue: '',
+                    deliveryAdressNumberTrue: '',
+                    complementDeliveryAddressTrue: '',
+                    avistaPrazo: ''
+                });
+
+                setShowDeliveryFields(false);
+                setSameAddress(null);
+                setPersonType('');
+
             } else {
                 console.error('Erro ao enviar dados:', response.statusText);
             }
@@ -97,6 +139,7 @@ export default function FormUse() {
             commercialZipCode: '',
             businessDistrict: '',
             businessCity: '',
+            businessState: '',
             commercialAdressNumber: '',
             complementBusinnesAddress: '',
             businessPhone: '',
@@ -108,11 +151,14 @@ export default function FormUse() {
 
             praca: '',
             atividade: '',
+            avistaPrazo: '',
+
 
             deliveryAdressTrue: '',
             deliveryZipCodeTrue: '',
             deliveryDistrictTrue: '',
             deliveryCityTrue: '',
+            deliveryStateTrue: '',
             deliveryAdressNumberTrue: '',
             complementDeliveryAddressTrue: '',
 
@@ -150,7 +196,7 @@ export default function FormUse() {
     const formatDocument = (value: string, type: string) => {
         const numbers = value.replace(/\D/g, '');
 
-        if (type === 'Fisica') {
+        if (type === 'false') {
             return numbers
                 .replace(/^(\d{3})(\d)/, '$1.$2')
                 .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
@@ -164,6 +210,13 @@ export default function FormUse() {
                 .replace(/(\d{4})(\d)/, '$1-$2')
                 .substring(0, 18);
         }
+    };
+
+    const formatPhone = (value: string) => {
+        return value
+            .replace(/^(\d{2})(\d)/, '($1) $2')
+            .replace(/(\d{5})(\d)/, '$1-$2')
+            .substring(0, 15);
     };
 
     const handlePersonTypeChange = (value: string) => {
@@ -180,7 +233,7 @@ export default function FormUse() {
 
         const fetchData = async () => {
 
-            if (tipoPessoa !== "Juridica") return;
+            if (tipoPessoa !== "true") return;
 
             const cleanCnpj = documentValue.replace(/\D/g, '');
 
@@ -208,15 +261,6 @@ export default function FormUse() {
                 };
 
                 const address = data.address || {};
-                const phones = Array.isArray(data.phones) ? data.phones : [];
-
-                const formatPhone = (phones: any) => {
-                    if (!phones) return '';
-                    const area = safeValue(phones.area);
-                    const number = safeValue(phones.number);
-                    return area && number ? `${area}${number}` : '';
-                };
-
 
                 form.setValue('razaoSocial', safeValue(data.razao_social || data.company?.name));
                 form.setValue('nomeFantasia', safeValue(data.nomeFantasia || data.alias));
@@ -225,31 +269,28 @@ export default function FormUse() {
                 form.setValue('complementBusinnesAddress', safeValue(address.details));
                 form.setValue('businessDistrict', safeValue(address.district));
                 form.setValue('businessCity', safeValue(address.city));
+                form.setValue('businessState', safeValue(address.state));
                 form.setValue('commercialZipCode', safeValue(address.zip));
                 form.setValue('inscricaoEstadual', safeValue(data.registrations[0].number))
-
 
                 if (sameAddress === 'Sim') {
                     form.setValue('deliveryAdressTrue', safeValue(address.street));
                     form.setValue('deliveryZipCodeTrue', safeValue(address.zip));
                     form.setValue('deliveryDistrictTrue', safeValue(address.district));
                     form.setValue('deliveryCityTrue', safeValue(address.city));
+                    form.setValue('deliveryStateTrue', safeValue(address.state));
                     form.setValue('deliveryAdressNumberTrue', safeValue(address.number));
                     form.setValue('complementDeliveryAddressTrue', safeValue(address.details));
                 }
-
-                const mainPhone = phones[0];
-                if (mainPhone) {
-                    form.setValue('businessPhone', formatPhone(mainPhone));
-                }
-
-                const billingPhone = phones[1];
-                if (billingPhone) {
-                    form.setValue('billingPhone', formatPhone(billingPhone));
-                }
-
             } catch (error) {
-                console.error('Erro ao buscar dados do CNPJ:', error);
+                toast.error('Erro ao buscar dados do CNPJ', {
+                    description: 'Verifique se o CNPJ foi digitado corretamente',
+                    style: {
+                        background: 'red',
+                        color: 'white'
+                    }
+                });
+
                 const fieldsToReset: Array<keyof FormValues> = [
                     'razaoSocial',
                     'nomeFantasia',
@@ -295,11 +336,11 @@ export default function FormUse() {
                                             onValueChange={handlePersonTypeChange}
                                         >
                                             <SelectTrigger>
-                                                <SelectValue>{field.value || 'Selecione o tipo'}</SelectValue>
+                                                <SelectValue>{field.value === 'true' ? 'Jurídica' : field.value === 'false' ? 'Física' : 'Selecione o tipo'}</SelectValue>
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="Fisica">Física</SelectItem>
-                                                <SelectItem value="Juridica">Jurídica</SelectItem>
+                                                <SelectItem value="false">Física</SelectItem>
+                                                <SelectItem value="true">Jurídica</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </FormControl>
@@ -341,25 +382,26 @@ export default function FormUse() {
                         />
 
                         <InputField control={form.control} name={`nomeFantasia`} label="Nome Fantasia" placeholder="Nome Fantasia" />
-                        
+
                         <InputField control={form.control} name={`razaoSocial`} label="Razão Social" placeholder="Razão Social" />
 
-                        <InputField control={form.control} name={`commercialAdress`} label="Endereço Comercial" placeholder="Endereço Comercial" />    
+                        <hr className='my-6' />
 
-                        <InputField control={form.control} name={`commercialAdressNumber`} label="Número" placeholder="Número" />    
-                       
-                        <InputField control={form.control} name={`complementBusinnesAddress`} label="Complemento" placeholder="Complemento" />    
-                        
-                        <InputField control={form.control} name={`businessDistrict`} label="Bairro" placeholder="Bairro" />    
-                        
-                        <InputField control={form.control} name={`businessCity`} label="Cidade" placeholder="Cidade" />    
-                        
-                        <InputField control={form.control} name={`commercialZipCode`} label="CEP" placeholder="CEP" />    
-                        
-                        {/* <InputField control={form.control} name={`businessPhone`} label="Telefone" placeholder="Telefone" />    
-                        
-                        <InputField control={form.control} name={`billingPhone`} label="Telefone" placeholder="Telefone" /> */}
-                        
+                        <InputField control={form.control} name={`commercialAdress`} label="Endereço Comercial" placeholder="Endereço Comercial" />
+
+                        <InputField control={form.control} name={`commercialAdressNumber`} label="Número" placeholder="Número" />
+
+                        <InputField control={form.control} name={`complementBusinnesAddress`} label="Complemento" placeholder="Complemento" />
+
+                        <InputField control={form.control} name={`businessDistrict`} label="Bairro" placeholder="Bairro" />
+
+                        <InputField control={form.control} name={`businessCity`} label="Cidade" placeholder="Cidade" />
+
+                        <InputField control={form.control} name={`businessState`} label="Estado" placeholder="Estado" />
+
+                        <InputField control={form.control} name={`commercialZipCode`} label="CEP" placeholder="CEP" />
+
+
                         <FormField
                             control={form.control}
                             name="enderecoEnt"
@@ -394,24 +436,66 @@ export default function FormUse() {
                                     <h2 className='font-semibold text-xl'>ENDERAÇO DE ENTREGA</h2>
                                 </div>
 
-                                <InputField control={form.control} name={`deliveryAdressTrue`} label="Endereço de Entrega" placeholder="Endereço de Entrega" />  
+                                <InputField control={form.control} name={`deliveryAdressTrue`} label="Endereço de Entrega" placeholder="Endereço de Entrega" />
 
                                 <InputField control={form.control} name={`deliveryAdressNumberTrue`} label="Numero" placeholder="Numero" />
 
                                 <InputField control={form.control} name={`complementDeliveryAddressTrue`} label="Complemento" placeholder="Complemento" />
 
-                                <InputField control={form.control} name={`deliveryDistrictTrue`} label="Bairro" placeholder="Bairro" />  
+                                <InputField control={form.control} name={`deliveryDistrictTrue`} label="Bairro" placeholder="Bairro" />
 
                                 <InputField control={form.control} name={`deliveryCityTrue`} label="Cidade" placeholder="Cidade" />
 
+                                <InputField control={form.control} name={`deliveryStateTrue`} label="Estado" placeholder="Estado" />
+
                                 <InputField control={form.control} name={`deliveryZipCodeTrue`} label="CEP" placeholder="CEP" />
-                                
+
                             </div>
                         )}
 
-                        <InputField control={form.control} name={`email`} label="Email" placeholder="Email" />
+                        <hr className='my-6' />
 
-                        <InputField control={form.control} name={`emailNfe`} label="Email NFE" placeholder="Email NFE" />
+                        <InputField control={form.control} name={`email`} label="Email" placeholder="email@email.com" />
+
+                        <FormField 
+                            control={form.control}
+                            name="businessPhone"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Telefone</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder='(00) 00000-0000' {...field}
+                                            onChange={(event) => {
+                                                const formatted = formatPhone(event.target.value);
+                                                field.onChange(formatted);
+                                            }}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+
+                        <InputField control={form.control} name={`emailNfe`} label="Email NFE" placeholder="emailnfe@email.com" />
+
+                        <FormField 
+                            control={form.control}
+                            name="billingPhone"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Telefone Cobrança</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder='(00) 00000-0000' {...field}
+                                            onChange={(event) => {
+                                                const formatted = formatPhone(event.target.value);
+                                                field.onChange(formatted);
+                                            }}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+
+                       
 
                         <InputField control={form.control} name={`codRCA`} label="Código do RCA" placeholder="Código do RCA" />
 
@@ -427,7 +511,7 @@ export default function FormUse() {
                                             onValueChange={field.onChange}
                                         >
                                             <SelectTrigger>
-                                            <SelectValue placeholder="Selecione a Praça">
+                                                <SelectValue placeholder="Selecione a Praça">
                                                     {field.value ? opstionsPraca.find(a => a.value === field.value)?.label : 'Praça do Cliente'}
                                                 </SelectValue>
                                             </SelectTrigger>
@@ -470,8 +554,30 @@ export default function FormUse() {
                                     </FormControl>
                                 </FormItem>
                             )}
-                        />
+                        /> 
+                        <FormField 
+                            control={form.control}
+                            name="avistaPrazo"
+                            render={({ field}) => (
+                                <FormItem>
+                                    <FormLabel>Forma de Pagamento</FormLabel>
+                                    <FormControl>
+                                        <Select value={field.value} onValueChange={field.onChange}>
+                                        <SelectTrigger>
+                                                <SelectValue placeholder="Selecione a forma de pagamento">
+                                                    {field.value ? atividade.find(a => a.value === field.value)?.label : 'Forma de Pagamento '}
+                                                </SelectValue>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="true">A Vista</SelectItem>
+                                                <SelectItem value="false">Prazo</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </FormControl>
+                                </FormItem>
+                            )}
 
+                        />                 
                         <Button
                             type="submit"
                             className="w-[400px] mt-8 bg-blue-400 hover:bg-blue-500 mx-auto"
@@ -479,7 +585,7 @@ export default function FormUse() {
                         >
                             {form.formState.isSubmitting ? 'Enviando...' : 'Enviar'}
                         </Button>
-                        
+
                     </form>
                 </Form>
             </Container>
