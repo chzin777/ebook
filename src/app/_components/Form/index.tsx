@@ -592,7 +592,7 @@ export default function FormUse() {
 
                         <Button
                             type="submit"
-                            className="w-[400px] mt-8 bg-blue-400 hover:bg-blue-500 mx-auto"
+                            className="w-[400px] mt-8 bg-blue-400 hover:bg-blue-500 mx-auto max-sm:w-full"
                             disabled={form.formState.isSubmitting}
                         >
                             {form.formState.isSubmitting ? 'Enviando...' : 'Enviar'}
