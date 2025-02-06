@@ -1,4 +1,3 @@
-import Image from "next/image";
 import FormUse from "./_components/Form";
 
 export default function Home() {

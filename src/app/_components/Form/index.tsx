@@ -1,6 +1,6 @@
 'use client'
 
-import z, { late } from 'zod';
+import z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
@@ -61,22 +61,24 @@ export default function FormUse() {
     const [showDeliveryFields, setShowDeliveryFields] = useState(false);
     const [sameAddress, setSameAddress] = useState<string | null>(null);
     const [personType, setPersonType] = useState('');
+    const [loading, setLoading] = useState(false);
 
 
     const handleSubmit = async (data: FormValues) => {
 
-
         try {
-            const response = await fetch('https://r3suprimentos.app.n8n.cloud/webhook-test/ac3d846a-eba7-4930-b038-b7282626ebae', {
+            const response = await fetch('https://r3suprimentos.app.n8n.cloud/webhook/ac3d846a-eba7-4930-b038-b7282626ebae', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(data),
             });
+
             if (response.ok) {
                 toast("Formulario enviado com sucesso!", {
-                    description: "O Cadastro do cliente está em analise"
+                    description: "O Cadastro do cliente está em analise",
+                    style: { background: "#00ced1", color: "white" },
                 });
 
 
@@ -109,7 +111,7 @@ export default function FormUse() {
                     deliveryStateTrue: '',
                     deliveryAdressNumberTrue: '',
                     complementDeliveryAddressTrue: '',
-                    avistaPrazo: ''
+                    avistaPrazo: '',
                 });
 
                 setShowDeliveryFields(false);
@@ -118,6 +120,7 @@ export default function FormUse() {
 
             } else {
                 console.error('Erro ao enviar dados:', response.statusText);
+
             }
         } catch (error) {
             console.error('Erro ao enviar dados:', error);
@@ -231,6 +234,8 @@ export default function FormUse() {
         const controller = new AbortController();
         const signal = controller.signal;
 
+
+
         const fetchData = async () => {
 
             if (tipoPessoa !== "true") return;
@@ -239,6 +244,9 @@ export default function FormUse() {
 
 
             if (cleanCnpj.length !== 14) return;
+
+            setLoading(true);
+            
 
             try {
                 const response = await fetch(`https://api.cnpja.com/office/${cleanCnpj}?maxAge=1&registrations=BR`, {
@@ -304,6 +312,10 @@ export default function FormUse() {
                 ];
 
                 fieldsToReset.forEach(field => form.setValue(field, ''));
+
+            }
+            finally {
+                setLoading(false);
             }
         };
 
@@ -320,7 +332,7 @@ export default function FormUse() {
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)} className='w-full border border-1-gray-200 p-10 rounded-sm shadow-lg flex flex-col gap-3'>
                         <div className='mb-10 flex flex-col items-center justify-center gap-10'>
-                            <Image src={"/PLANO_DE_HIGIENE.png"} width={1920} height={200} alt='Banner' className='shadow-lg rounded-sm' />
+                            <Image src={"/PLANO_DE_HIGIENE.png"} width={1920} height={200} alt='Banner' priority className='shadow-lg rounded-sm' />
                             <h1 className='font-semibold text-xl'>FORMULÁRIO PARA CADASTRO</h1>
                         </div>
                         <FormField
@@ -456,7 +468,7 @@ export default function FormUse() {
 
                         <InputField control={form.control} name={`email`} label="Email" placeholder="email@email.com" />
 
-                        <FormField 
+                        <FormField
                             control={form.control}
                             name="businessPhone"
                             render={({ field }) => (
@@ -476,7 +488,7 @@ export default function FormUse() {
 
                         <InputField control={form.control} name={`emailNfe`} label="Email NFE" placeholder="emailnfe@email.com" />
 
-                        <FormField 
+                        <FormField
                             control={form.control}
                             name="billingPhone"
                             render={({ field }) => (
@@ -494,7 +506,7 @@ export default function FormUse() {
                             )}
                         />
 
-                       
+
 
                         <InputField control={form.control} name={`codRCA`} label="Código do RCA" placeholder="Código do RCA" />
 
@@ -553,16 +565,16 @@ export default function FormUse() {
                                     </FormControl>
                                 </FormItem>
                             )}
-                        /> 
-                        <FormField 
+                        />
+                        <FormField
                             control={form.control}
                             name="avistaPrazo"
-                            render={({ field}) => (
+                            render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Forma de Pagamento</FormLabel>
                                     <FormControl>
                                         <Select value={field.value} onValueChange={field.onChange}>
-                                        <SelectTrigger>
+                                            <SelectTrigger>
                                                 <SelectValue placeholder="Selecione a forma de pagamento">
                                                     {field.value ? atividade.find(a => a.value === field.value)?.label : 'Forma de Pagamento '}
                                                 </SelectValue>
@@ -576,7 +588,8 @@ export default function FormUse() {
                                 </FormItem>
                             )}
 
-                        />                 
+                        />
+
                         <Button
                             type="submit"
                             className="w-[400px] mt-8 bg-blue-400 hover:bg-blue-500 mx-auto"
