@@ -246,7 +246,7 @@ export default function FormUse() {
             if (cleanCnpj.length !== 14) return;
 
             setLoading(true);
-            
+
 
             try {
                 const response = await fetch(`https://api.cnpja.com/office/${cleanCnpj}?maxAge=1&registrations=BR`, {
@@ -384,7 +384,7 @@ export default function FormUse() {
                             render={({ field }) => (
                                 <FormItem className='flex flex-col'>
                                     <FormLabel> Inscrição Estadual</FormLabel>
-                                    <small className='text-gray-400 text-xs leading-none'>Isento para CPF não Contribuinte</small>
+                                    <small className='text-gray-400 text-xs leading-none'>Isento para CNPJ não Contribuinte</small>
                                     <FormControl>
                                         <Input placeholder="Inscrição Estadual" {...field} />
                                     </FormControl>
@@ -397,6 +397,9 @@ export default function FormUse() {
                         <InputField control={form.control} name={`razaoSocial`} label="Razão Social" placeholder="Razão Social" />
 
                         <hr className='my-6' />
+                            <div className='mx-auto'>
+                                <h2 className='font-semibold text-xl'>ENDEREÇO COMERCIAL</h2>
+                            </div>
 
                         <InputField control={form.control} name={`commercialAdress`} label="Endereço Comercial" placeholder="Endereço Comercial" />
 
@@ -442,9 +445,9 @@ export default function FormUse() {
                             )}
                         />
                         {showDeliveryFields && (
-                            <div className="flex flex-col gap-3 border border-1-green-100 p-10 rounded-sm shadow-sm">
+                            <div className="flex flex-col gap-3 border bg-slate-100 border-1-green-100 p-10 rounded-sm shadow-sm">
                                 <div className='mx-auto'>
-                                    <h2 className='font-semibold text-xl'>ENDERAÇO DE ENTREGA</h2>
+                                    <h2 className='font-semibold text-xl'>ENDEREÇO DE ENTREGA</h2>
                                 </div>
 
                                 <InputField control={form.control} name={`deliveryAdressTrue`} label="Endereço de Entrega" placeholder="Endereço de Entrega" />
