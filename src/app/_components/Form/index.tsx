@@ -291,6 +291,7 @@ export default function FormUse() {
                     form.setValue('complementDeliveryAddressTrue', safeValue(address.details));
                 }
             } catch (error) {
+                console.error(error);
                 toast.error('Erro ao buscar dados do CNPJ, Verifique se o CNPJ foi digitado corretamente', {
                     style: {
                         background: 'red',
@@ -397,9 +398,9 @@ export default function FormUse() {
                         <InputField control={form.control} name={`razaoSocial`} label="Razão Social" placeholder="Razão Social" />
 
                         <hr className='my-6' />
-                            <div className='mx-auto'>
-                                <h2 className='font-semibold text-xl'>ENDEREÇO COMERCIAL</h2>
-                            </div>
+                        <div className='mx-auto'>
+                            <h2 className='font-semibold text-xl'>ENDEREÇO COMERCIAL</h2>
+                        </div>
 
                         <InputField control={form.control} name={`commercialAdress`} label="Endereço Comercial" placeholder="Endereço Comercial" />
 
@@ -478,10 +479,13 @@ export default function FormUse() {
                                 <FormItem>
                                     <FormLabel>Telefone</FormLabel>
                                     <FormControl>
-                                        <Input placeholder='(00) 00000-0000' {...field}
+                                        <Input
+                                            placeholder='(00) 00000-0000'
+                                            value={formatPhone(field.value)}
                                             onChange={(event) => {
                                                 const formatted = formatPhone(event.target.value);
-                                                field.onChange(formatted);
+                                                const numbersOnly = formatted.replace(/\D/g, '');
+                                                field.onChange(numbersOnly);
                                             }}
                                         />
                                     </FormControl>
@@ -489,7 +493,12 @@ export default function FormUse() {
                             )}
                         />
 
-                        <InputField control={form.control} name={`emailNfe`} label="Email NFE" placeholder="emailnfe@email.com" />
+                        <InputField
+                            control={form.control}
+                            name={`emailNfe`}
+                            label="Email NFE"
+                            placeholder="emailnfe@email.com"
+                        />
 
                         <FormField
                             control={form.control}
@@ -498,17 +507,19 @@ export default function FormUse() {
                                 <FormItem>
                                     <FormLabel>Telefone Cobrança</FormLabel>
                                     <FormControl>
-                                        <Input placeholder='(00) 00000-0000' {...field}
+                                        <Input
+                                            placeholder='(00) 00000-0000'
+                                            value={formatPhone(field.value)}
                                             onChange={(event) => {
                                                 const formatted = formatPhone(event.target.value);
-                                                field.onChange(formatted);
+                                                const numbersOnly = formatted.replace(/\D/g, '');
+                                                field.onChange(numbersOnly);
                                             }}
                                         />
                                     </FormControl>
                                 </FormItem>
                             )}
                         />
-
 
 
                         <InputField control={form.control} name={`codRCA`} label="Código do RCA" placeholder="Código do RCA" />
