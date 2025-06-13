@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Formulário HubSpot",
+  title: "Ebook R3",
   description: "Criado por R3 Tech",
 };
 
