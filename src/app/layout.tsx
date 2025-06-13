@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ebook R3",
+  title: "eBook R3",
   description: "Criado por R3 Tech",
 };
 
