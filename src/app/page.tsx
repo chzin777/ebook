@@ -7,14 +7,14 @@ export default function Home() {
         {/* Imagem de fundo com blur */}
         <div className="absolute inset-0 z-0">
           <img
-            src="https://reflectivenw.com/wp-content/uploads/2024/07/Feature-how-to-start-a-window-cleaning-business.jpeg"
+            src="https://mktkarcher.com.br/wp-content/uploads/2024/07/IVM_100_Food_industry_fishfactory_vaccum_app_03_CI20-Screen.jpg"
             alt="fundo"
-            className="w-full h-full object-cover blur-sm scale-110 opacity-60"
+            className="w-full h-full object-cover blur-[2px] scale-110 opacity-50"
           />
         </div>
 
         {/* Logo centralizada e visível */}
-        <div className="relative z-10 mb-8">
+        <div className="relative z-10 mb-8"> 
           <img
             src="/images/logo.png"
             alt="Logo da R3 Suprimentos"
@@ -58,7 +58,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className='bg-[#4a4a49] text-white text-center py-6 text-sm sm:text-texbase'>
+      <footer className='bg-[#4a4a49] text-white text-center py-6 text-sm sm:text-base'>
         <p>© {new Date().getFullYear()} R3 Suprimentos. Todos os direitos reservados.</p>
       </footer>
 
