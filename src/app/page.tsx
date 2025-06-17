@@ -7,7 +7,7 @@ export default function Home() {
         {/* Imagem de fundo com blur */}
         <div className="absolute inset-0 z-0">
           <img
-            src="https://mktkarcher.com.br/wp-content/uploads/2024/07/IVM_100_Food_industry_fishfactory_vaccum_app_03_CI20-Screen.jpg"
+            src="/images/limpeza.jpg"
             alt="fundo"
             className="w-full h-full object-cover blur-[2px] scale-110 opacity-50"
           />
