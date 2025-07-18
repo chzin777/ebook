@@ -62,7 +62,7 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ## Contato
 
-Desenvolvido por **Christofer Henrique** para R3 Suprimentos.  
+Desenvolvido por **Christofer Henrique** e **Jhionathan Vitória** para R3 Suprimentos.  
 Dúvidas? Sugestões? Fale comigo!
 
 ---
