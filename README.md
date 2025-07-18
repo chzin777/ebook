@@ -11,7 +11,7 @@
 
 ## Sobre o Projeto
 
-Esta landing page foi desenvolvida para capturar leads interessados em limpeza profissional, oferecendo como incentivo um eBook exclusivo: **"Os 3 erros mais comuns na limpeza profissional"**.
+Esta landing page foi desenvolvida em **Next.js** para capturar leads interessados em limpeza profissional, oferecendo como incentivo um eBook exclusivo: **"Os 3 erros mais comuns na limpeza profissional"**.
 
 O visitante preenche um formulário simples com seus dados de contato e, após o envio, o download do eBook é realizado automaticamente no dispositivo do usuário.
 
@@ -29,9 +29,12 @@ O visitante preenche um formulário simples com seus dados de contato e, após o
 
 ## Tecnologias Utilizadas
 
+- **Next.js**  
+- **React**  
 - **HTML5**  
-- **CSS3**  
-- (Opcional) JavaScript para download automático e validação de formulário  
+- **CSS3 / Tailwind CSS**  
+- **JavaScript/TypeScript**  
+- Integração com serviços de e-mail e download automático do eBook  
 
 ---
 
@@ -48,9 +51,24 @@ O visitante preenche um formulário simples com seus dados de contato e, após o
 ## Como usar
 
 1. Clone ou baixe este repositório  
-2. Edite o arquivo `index.html` caso queira alterar textos, imagens ou links de download  
-3. Hospede a página em seu servidor ou serviço de hospedagem  
-4. Pronto! Sua página já estará capturando leads e distribuindo o eBook automaticamente
+    ```bash
+    git clone https://github.com/seu-usuario/seu-repositorio.git
+    cd seu-repositorio
+    ```
+2. Instale as dependências:  
+    ```bash
+    npm install
+    ```
+3. Inicie o servidor de desenvolvimento:  
+    ```bash
+    npm run dev
+    ```
+4. Acesse em [http://localhost:3000](http://localhost:3000) no seu navegador.
+5. Para produção, siga o padrão Next.js:  
+    ```bash
+    npm run build
+    npm start
+    ```
 
 ---
 
@@ -63,6 +81,6 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 ## Contato
 
 Desenvolvido por **Christofer Henrique** e **Jhionathan Vitória** para R3 Suprimentos.  
-Dúvidas? Sugestões? Fale comigo!
+Dúvidas? Sugestões? Fale com a equipe!
 
 ---
